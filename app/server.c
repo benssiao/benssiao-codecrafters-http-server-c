@@ -53,7 +53,7 @@ int main() {
     int connected_fd;
     while(1) {
     
-        if (connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len) == -1) {
+        if ((connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len)) == -1) {
             perror("accept error.");
             continue;
         }
