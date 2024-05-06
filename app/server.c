@@ -50,9 +50,27 @@ int main() {
 	
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
+    int connected_fd;
+    while(1) {
+    
+        if (connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len) == -1) {
+            perror("accept error.");
+            continue;
+        }
+        else {
+            printf("Client connected\n");
+            char *status_line = "HTTP/1.1 200 OK \r\n\r\n";
+            if (send(connected_fd, status_line, strlen(status_line), 0) == -1){
+                perror("send error.");
+            }
+            close(connected_fd);
+            exit(0);
+        }
+        
+
+
+    }
 	
-	accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
-	printf("Client connected\n");
 	
 	close(server_fd);
 
