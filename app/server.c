@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+
 int main() {
 	// Disable output buffering
 	setbuf(stdout, NULL);
@@ -62,7 +63,32 @@ int main() {
             char *status_line = "HTTP/1.1 200 OK \r\n\r\n";
             if (send(connected_fd, status_line, strlen(status_line), 0) == -1){
                 perror("send error.");
+                close(connected_fd);
+                exit(1);
             }
+            char incoming_msg[1024];
+            int buff_size = 1024;
+            if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
+                perror("receive error.");
+                exit(1);
+            }
+            char *path_start, *path_end;
+            if ((path_start = strchr(incoming_msg, '/')) == NULL) {
+                perror("Input error.");
+                exit(1);
+            }
+            if ((path_end = strchr(path_start, ' ')) == NULL) {
+                perror("Input error2.");
+                exit(1);
+            }
+            char output[1024] = {'\0'};
+            strncpy(output, path_start, (path_end-path_start+1)/sizeof(char));
+            printf("%s\n", output);
+            
+
+            
+            
+
             close(connected_fd);
             exit(0);
         }
