@@ -84,12 +84,17 @@ int main() {
             }
             char output[1024] = {'\0'};
             strncpy(output, path_start+6, (path_end-path_start-6)/sizeof(char));
-            printf("%s\n", output);
+            // printf("%s\n", output);
             char response[1100];
             snprintf(response, 1100, \
                     "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
                     , strlen(output), output);
-            printf("%s\n", response);
+            // printf("%s\n", response);
+            if (send(connected_fd, response, strlen(response), 0) == -1) {
+                perror("send error 3.");
+                close(connected_fd);
+                exit(1);
+            }
 
            /* if (strcmp(output, "/") == 0) {
                 response = "HTTP/1.1 200 OK\r\n\r\n";
