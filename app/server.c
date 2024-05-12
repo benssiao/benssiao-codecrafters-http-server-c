@@ -83,7 +83,7 @@ int main() {
                 exit(1);
             }
             char output[1024] = {'\0'};
-            strncpy(output, path_start, (path_end-path_start+1)/sizeof(char));
+            strncpy(output, path_start, (path_end-path_start)/sizeof(char));
             printf("%s\n", output);
             printf("%d\n", strcmp(output, "/"));
             char *response;
