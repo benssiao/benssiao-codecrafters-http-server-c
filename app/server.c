@@ -78,16 +78,20 @@ int main() {
                 perror("Input error.");
                 exit(1);
             }
-            if ((path_end = strchr(path_start, ' ')) == NULL) {
+            if ((path_end = strchr(path_start+6, ' ')) == NULL) {
                 perror("Input error2.");
                 exit(1);
             }
             char output[1024] = {'\0'};
-            strncpy(output, path_start, (path_end-path_start)/sizeof(char));
+            strncpy(output, path_start+6, (path_end-path_start-6)/sizeof(char));
             printf("%s\n", output);
-            printf("%d\n", strcmp(output, "/"));
-            char *response;
-            if (strcmp(output, "/") == 0) {
+            char response[1100];
+            snprintf(response, 1100, \
+                    "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
+                    , strlen(output), output);
+            printf("%s\n", response);
+
+           /* if (strcmp(output, "/") == 0) {
                 response = "HTTP/1.1 200 OK\r\n\r\n";
                 if (send(connected_fd, response, strlen(response), 0) == -1) {
                     perror("send error 2.");
@@ -103,7 +107,7 @@ int main() {
                     exit(1);
                 }
             }
-            
+           */ 
 
             
             
