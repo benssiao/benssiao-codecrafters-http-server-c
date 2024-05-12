@@ -83,7 +83,24 @@ int main() {
             }
             char output[1024] = {'\0'};
             strncpy(output, path_start, (path_end-path_start+1)/sizeof(char));
-            printf("%s\n", output);
+            //printf("%s\n", output);
+            char *response;
+            if (strcmp(output, "\\") == 0) {
+                response = "HTTP/1.1 200 OK \r\n\r\n";
+                if (send(connected_fd, response, strlen(response), 0) == -1) {
+                    perror("send error 2.");
+                    close(connected_fd);
+                    exit(1);
+                }
+            }
+            else {
+                response = "HTTP/1.1 404 Not Found \r\n\r\n";
+                 if (send(connected_fd, response, strlen(response), 0) == -1) {
+                    perror("send error 2.");
+                    close(connected_fd);
+                    exit(1);
+                }
+            }
             
 
             
