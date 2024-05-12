@@ -84,8 +84,8 @@ int main() {
             }
             char output[1024] = {'\0'};
             strncpy(output, path_start, (path_end-path_start+1)/sizeof(char));
-            // printf("%s\n", output);
-            // printf("%d\n", strcmp(output, "/"));
+            printf("%s\n", output);
+            printf("%d\n", strcmp(output, "/"));
             char *response;
             if (strcmp(output, "/") == 0) {
                 response = "HTTP/1.1 200 OK\r\n\r\n";
