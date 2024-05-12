@@ -89,7 +89,7 @@ int main() {
             snprintf(response, 1100, \
                     "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
                     , strlen(output), output);
-            // printf("%s\n", response);
+            printf("%s\n", response);
             if (send(connected_fd, response, strlen(response), 0) == -1) {
                 perror("send error 3.");
                 close(connected_fd);
