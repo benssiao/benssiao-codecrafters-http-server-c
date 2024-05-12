@@ -60,12 +60,13 @@ int main() {
         }
         else {
             printf("Client connected\n");
-            char *status_line = "HTTP/1.1 200 OK \r\n\r\n";
+           /* char *status_line = "HTTP/1.1 200 OK \r\n\r\n";
             if (send(connected_fd, status_line, strlen(status_line), 0) == -1){
                 perror("send error.");
                 close(connected_fd);
                 exit(1);
             }
+            */
             char incoming_msg[1024];
             int buff_size = 1024;
             if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
