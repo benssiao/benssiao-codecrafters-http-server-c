@@ -85,9 +85,9 @@ int main() {
                     perror("Input error2.");
                     exit(1);
                 }
+                printf("%p, %p\n", path_start, path_end);
                 if (path_start+1 == path_end) {
                     send200(connected_fd);
-                    
                 }
                 else if (path_start[1]-'e' == 0) {
                     char output[1024] = {'\0'};
