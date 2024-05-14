@@ -6,27 +6,23 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-
 int check_if_valid_path(const char*);
 void send200(int);
 void send404(int);
+char **extract_path(const char *incoming);
 int main() {
 	// Disable output buffering
 	setbuf(stdout, NULL);
-
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	printf("Logs from your program will appear here!\n");
     int server_fd, client_addr_len;
-
 	// Uncomment this block to pass the first stage
 	struct sockaddr_in client_addr;
-	
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
 		printf("Socket creation failed: %s...\n", strerror(errno));
 		return 1;
 	}
-	
 	// Since the tester restarts your program quite often, setting REUSE_PORT
 	// ensures that we don't run into 'Address already in use' errors
 	int reuse = 1;
@@ -62,13 +58,6 @@ int main() {
         }
         else {
             printf("Client connected\n");
-           /* char *status_line = "HTTP/1.1 200 OK \r\n\r\n";
-            if (send(connected_fd, status_line, strlen(status_line), 0) == -1){
-                perror("send error.");
-                close(connected_fd);
-                exit(1);
-            }
-            */
             char incoming_msg[1024];
             int buff_size = 1024;
             if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
@@ -76,28 +65,17 @@ int main() {
                 exit(1);
             }
             if (check_if_valid_path(incoming_msg) == 0) {
-                char *path_start, *path_end;
-                if ((path_start = strchr(incoming_msg, '/')) == NULL) {
-                    perror("Input error.");
-                    exit(1);
-                }
-                if ((path_end = strchr(path_start, ' ')) == NULL) {
-                    perror("Input error2.");
-                    exit(1);
-                }
-                printf("%p, %p\n", path_start+1, path_end);
-                if (path_start+1 == path_end) {
+                char **path = extract_path(incoming_msg);
+                if (strcmp(path[0], "") == 0) {
                     send200(connected_fd);
-                }
-                else if (path_start[1]-'e' == 0) {
-                    char output[1024] = {'\0'};
-                    strncpy(output, path_start+6, (path_end-path_start-6)/sizeof(char));
+                } 
+                else if (strcmp(path[0], "echo") == 0) {
                     // printf("%s\n", output);
                     char response[1100];
                     snprintf(response, 1100, \
                             "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                            , strlen(output), output);
-                    printf("%s\n", response);
+                            , strlen(path[1]), path[1]);
+                    // printf("%s\n", response);
                     if (send(connected_fd, response, strlen(response), 0) == -1) {
                         perror("send error 3.");
                         close(connected_fd);
@@ -108,42 +86,11 @@ int main() {
                     send404(connected_fd);
                 }
             }
-            /*
-            char output[1024] = {'\0'};
-            if (strcmp(output, "/") == 0) {
-                response = "HTTP/1.1 200 OK\r\n\r\n";
-                if (send(connected_fd, response, strlen(response), 0) == -1) {
-                    perror("send error 2.");
-                    close(connected_fd);
-                    exit(1);
-                }
-            }
             else {
-                response = "HTTP/1.1 404 Not Found\r\n\r\n";
-                 if (send(connected_fd, response, strlen(response), 0) == -1) {
-                    perror("send error 2.");
-                    close(connected_fd);
-                    exit(1);
-                }
+                send404(connected_fd);
             }
-            */
-           
-
-            
-            
-
             close(connected_fd);
             exit(0);
-        }
-        
-
-
-    }
-	
-	
-	close(server_fd);
-
-	return 0;
 }
 int check_if_valid_path(const char* path) {
     char *path_start, *path_end;
@@ -163,9 +110,7 @@ void send404(int socket) {
         close(socket);
         exit(1);
     }
-
 }
-
 void send200(int socket) {
     char *response; 
     response = "HTTP/1.1 200 OK\r\n\r\n";
@@ -174,4 +119,22 @@ void send200(int socket) {
         close(socket);
         exit(1);
     }
+}
+char **extract_path(const char* incoming) {
+    char *path_start, *path_end;
+    char **output;
+    if ((path_start = strchr(incoming, '/')) == NULL) {
+        perror("Input error.");
+        exit(1);
+    }
+    if ((path_end = strchr(path_start, ' ')) == NULL) {
+        perror("Input error2.");
+        exit(1);
+    }
+    output = (char**) malloc(sizeof(char*)*(path_end-path_start));
+    char temp_str[(path_end-path_start)];
+    memcpy(temp_str, path_start, sizeof(char)*(path_end-path_start-1));
+    temp_str[path_end-path_start] = '\0';
+    char path[path_end-path_start]
+
 }
