@@ -95,7 +95,7 @@ int main() {
                     // printf("%s\n", output);
                     char response[1100];
                     snprintf(response, 1100, \
-                            "HTTP-version 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
+                            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
                             , strlen(output), output);
                     printf("%s\n", response);
                     if (send(connected_fd, response, strlen(response), 0) == -1) {
