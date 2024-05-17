@@ -66,56 +66,44 @@ int main() {
                 exit(1);
             }
             printf("incoming_msg: %s\n", incoming_msg);
-            if (check_if_valid_path(incoming_msg) == 0) {
-                // is a valid path
-                char **path_list = extract_path(incoming_msg);
-                if (strcmp(path_list[0], "") == 0) {
+            char **path_list = extract_path(incoming_msg);
+            printf("Comparison result: %d\n", strcmp(path_list[0], ""));
+            if (strcmp(path_list[0], "") == 0) {
+                free_pathlist(path_list);
+                send200(connected_fd);
+            } 
+            else if (strcmp(path_list[0], "echo") == 0) {
+                // printf("%s\n", output);
+                char response[1100];
+                snprintf(response, 1100, \
+                        "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
+                        , strlen(path_list[1]), path_list[1]);
+                // printf("%s\n", response);
+                if (send(connected_fd, response, strlen(response), 0) == -1) {
+                    perror("send error 3.");
+                    close(connected_fd);
                     free_pathlist(path_list);
-                    send200(connected_fd);
-                } 
-                else if (strcmp(path_list[0], "echo") == 0) {
-                    // printf("%s\n", output);
-                    char response[1100];
-                    snprintf(response, 1100, \
-                            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                            , strlen(path_list[1]), path_list[1]);
-                    // printf("%s\n", response);
-                    if (send(connected_fd, response, strlen(response), 0) == -1) {
-                        perror("send error 3.");
-                        close(connected_fd);
-                        free_pathlist(path_list);
-                        exit(1);
-                        }
-                    free_pathlist(path_list);
+                    exit(1);
                     }
-                else {
-                    free_pathlist(path_list);
-                    send404(connected_fd);
+                free_pathlist(path_list);
                 }
-            }
             else {
+                printf("This is wrong!!!");
+                free_pathlist(path_list);
                 send404(connected_fd);
             }
+            }
+            
             
             close(connected_fd);
             exit(0);
             }
-            }
-}
-int check_if_valid_path(const char* path) {
-    char *path_start, *path_end;
-        if ((path_start = strchr(path, '/')) == NULL) {
-            return 1;
-        }
-        if ((path_end = strchr(path_start, ' ')) == NULL) {
-            return 1;
-        }
-        return 0; 
-}
+    }
+
 void send404(int socket) {
     char *response; 
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    if (send(socket, response, sizeof(response), 0 ) == -1) {
+    if (send(socket, response, strlen(response), 0) == -1) {
         perror("senderror 4.");
         close(socket);
         exit(1);
@@ -124,7 +112,7 @@ void send404(int socket) {
 void send200(int socket) {
     char *response; 
     response = "HTTP/1.1 200 OK\r\n\r\n";
-    if (send(socket, response, sizeof(response), 0 ) == -1) {
+    if (send(socket, response, strlen(response), 0 ) == -1) {
         perror("senderror 5.");
         close(socket);
         exit(1);
