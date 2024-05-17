@@ -51,7 +51,7 @@ int main() {
 	client_addr_len = sizeof(client_addr);
     int connected_fd;
     while(1) {
-    
+        // begin listening loop.
         if ((connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len)) == -1) {
             perror("accept error.");
             continue;
@@ -64,33 +64,41 @@ int main() {
                 perror("receive error.");
                 exit(1);
             }
+            printf("incoming_msg: %s\n", incoming_msg);
             if (check_if_valid_path(incoming_msg) == 0) {
-                char **path = extract_path(incoming_msg);
-                if (strcmp(path[0], "") == 0) {
+                // is a valid path
+                char **path_list = extract_path(incoming_msg);
+                if (strcmp(path_list[0], "") == 0) {
+                    free_pathlist(path_list);
                     send200(connected_fd);
                 } 
-                else if (strcmp(path[0], "echo") == 0) {
+                else if (strcmp(path_list[0], "echo") == 0) {
                     // printf("%s\n", output);
                     char response[1100];
                     snprintf(response, 1100, \
                             "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                            , strlen(path[1]), path[1]);
+                            , strlen(path_list[1]), path_list[1]);
                     // printf("%s\n", response);
                     if (send(connected_fd, response, strlen(response), 0) == -1) {
                         perror("send error 3.");
                         close(connected_fd);
+                        free_pathlist(path_list);
                         exit(1);
                     }
                         }
                 else {
+                    free_pathlist(path_list);
                     send404(connected_fd);
                 }
             }
             else {
                 send404(connected_fd);
             }
+            
             close(connected_fd);
             exit(0);
+            }
+            }
 }
 int check_if_valid_path(const char* path) {
     char *path_start, *path_end;
@@ -131,10 +139,33 @@ char **extract_path(const char* incoming) {
         perror("Input error2.");
         exit(1);
     }
-    output = (char**) malloc(sizeof(char*)*(path_end-path_start));
-    char temp_str[(path_end-path_start)];
-    memcpy(temp_str, path_start, sizeof(char)*(path_end-path_start-1));
-    temp_str[path_end-path_start] = '\0';
-    char path[path_end-path_start]
+    
+    // printf("%d\n", path_end-path_start+1);
+    char path_str[(path_end-path_start+1)];
+    memcpy(path_str, path_start, sizeof(char)*(path_end-path_start));
+    path_str[path_end-path_start] = '\0';
+    // printf("%s\n", path_str);
+    output = (char**) malloc(sizeof(char*)*(10)); // Need 1 more for the terminating null char.
+    int i = 0;
+    for (char *iter = strtok(path_str, "/"); iter != NULL; iter = strtok(NULL, "/")) {
+        char *curr_str = (char*)malloc(strlen(iter)*sizeof(char)+1);
+        if (memcpy(curr_str, iter, sizeof(char)*strlen(iter)) == -1) {
+            perror("memcpy error");
+            exit(1);
+        }
+        curr_str[strlen(iter)] = '\0';
+        output[i] = curr_str;
+        i++;
+    }
+    char *end = (char*)malloc(sizeof(char));
+    *end = '\0';
+    output[i] = end;
+    return output;
+}
 
+void free_pathlist(char **path_list){
+    for (char **iter = path_list; strcmp(*iter, "") != 0; iter++) {
+        free(*iter);
+    }
+    free(path_list);
 }
