@@ -85,8 +85,9 @@ int main() {
                         close(connected_fd);
                         free_pathlist(path_list);
                         exit(1);
-                    }
                         }
+                    free_pathlist(path_list);
+                    }
                 else {
                     free_pathlist(path_list);
                     send404(connected_fd);

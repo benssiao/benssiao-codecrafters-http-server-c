@@ -4,6 +4,7 @@
 #include <string.h>
 
 char **extract_path(const char* incoming);
+void free_pathlist(char**);
 int main(void){
 
     char **path_list = extract_path("/ ");
@@ -38,10 +39,7 @@ char **extract_path(const char* incoming) {
     int i = 0;
     for (char *iter = strtok(path_str, "/"); iter != NULL; iter = strtok(NULL, "/")) {
         char *curr_str = (char*)malloc(strlen(iter)*sizeof(char)+1);
-        if (memcpy(curr_str, iter, sizeof(char)*strlen(iter)) == -1) {
-            perror("memcpy error");
-            exit(1);
-        }
+        memcpy(curr_str, iter, sizeof(char)*strlen(iter));
         curr_str[strlen(iter)] = '\0';
         output[i] = curr_str;
         i++;
