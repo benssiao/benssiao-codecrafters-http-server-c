@@ -10,6 +10,7 @@ int check_if_valid_path(const char*);
 void send200(int);
 void send404(int);
 char **extract_path(const char *incoming);
+void free_pathlist(char**);
 int main() {
 	// Disable output buffering
 	setbuf(stdout, NULL);
