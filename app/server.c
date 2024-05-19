@@ -74,7 +74,7 @@ int main() {
             for (char **iter = path_list; strcmp(*iter, "") != 0; iter++) {
                 printf("%s\n", *iter);
             }
-            
+            printf("comp: %d\n", strcmp(path_list[0], "user-agent "));
             printf("Comparison result: %d\n", strcmp(path_list[0], ""));
             if (strcmp(path_list[0], "") == 0) {
                 free_pathlist(path_list);
@@ -159,7 +159,7 @@ char **extract_path(const char* incoming) {
     char path_str[(path_end-path_start+1)];
     memcpy(path_str, path_start, sizeof(char)*(path_end-path_start));
     path_str[path_end-path_start] = '\0';
-     printf("path_str: %s\n", path_str);
+    // printf("path_str: %s\n", path_str);
     output = (char**) malloc(sizeof(char*)*(10)); // Need 1 more for the terminating null char.
     int i = 0;
     for (char *iter = strtok(path_str, "/"); iter != NULL; iter = strtok(NULL, "/")) {
