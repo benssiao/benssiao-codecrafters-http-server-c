@@ -74,8 +74,8 @@ int main() {
             for (char **iter = path_list; strcmp(*iter, "") != 0; iter++) {
                 printf("%s\n", *iter);
             }
-            printf("comp: %d\n", strcmp(path_list[0], "user-agent "));
-            printf("Comparison result: %d\n", strcmp(path_list[0], ""));
+            printf("comp: %d\n", strcmp(path_list[0], "user-agent"));
+            
             if (strcmp(path_list[0], "") == 0) {
                 free_pathlist(path_list);
                 send200(connected_fd);
