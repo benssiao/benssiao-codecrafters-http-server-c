@@ -105,7 +105,7 @@ int main() {
                 if (send(connected_fd, response, strlen(response), 0) == -1) {
                     perror("send error 3.");
                     close(connected_fd);
-                    free_pathlist(path_list)
+                    free_pathlist(path_list);
                     free_user_agent(user_agent);
                     exit(1);
                     }
