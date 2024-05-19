@@ -67,6 +67,9 @@ int main() {
             }
             printf("incoming_msg: %s\n", incoming_msg);
             char **path_list = extract_path(incoming_msg);
+            for (char *iter = *path_list; strcmp(iter, "") != 0; iter++) {
+                printf("%s\n", iter);
+            }
             printf("Comparison result: %d\n", strcmp(path_list[0], ""));
             if (strcmp(path_list[0], "") == 0) {
                 free_pathlist(path_list);
