@@ -154,6 +154,7 @@ char **extract_path(const char* incoming) {
         perror("Input error2.");
         exit(1);
     }
+    path_end--;
     
     // printf("%d\n", path_end-path_start+1);
     char path_str[(path_end-path_start+1)];
