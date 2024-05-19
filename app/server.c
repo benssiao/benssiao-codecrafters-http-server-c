@@ -70,11 +70,11 @@ int main() {
             printf("incoming_msg: %s\n", incoming_msg);
             char **path_list = extract_path(incoming_msg);
 
-            /*
+            
             for (char **iter = path_list; strcmp(*iter, "") != 0; iter++) {
                 printf("%s\n", *iter);
             }
-            */
+            
             printf("Comparison result: %d\n", strcmp(path_list[0], ""));
             if (strcmp(path_list[0], "") == 0) {
                 free_pathlist(path_list);
@@ -105,6 +105,7 @@ int main() {
                 if (send(connected_fd, response, strlen(response), 0) == -1) {
                     perror("send error 3.");
                     close(connected_fd);
+                    free_pathlist(path_list)
                     free_user_agent(user_agent);
                     exit(1);
                     }
@@ -112,7 +113,7 @@ int main() {
 
             }
             else {
-                printf("This is wrong!!!");
+                // printf("This is wrong!!!");
                 free_pathlist(path_list);
                 send404(connected_fd);
             }
