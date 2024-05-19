@@ -11,7 +11,7 @@ void send200(int);
 void send404(int);
 char **extract_path(const char *incoming);
 void free_pathlist(char**);
-char **extract_user_agent(const char *incoming);
+char *extract_user_agent(const char *incoming);
 void free_user_agent(char *user_agent);
 int main() {
 	// Disable output buffering
@@ -105,7 +105,7 @@ int main() {
                 if (send(connected_fd, response, strlen(response), 0) == -1) {
                     perror("send error 3.");
                     close(connected_fd);
-                    free_pathlist(path_list);
+                    free_user_agent(user_agent);
                     exit(1);
                     }
 
