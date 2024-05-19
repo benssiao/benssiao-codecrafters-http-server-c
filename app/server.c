@@ -95,7 +95,7 @@ int main() {
                     }
                 free_pathlist(path_list);
                 }
-            else if (strcmp(path_list[0], "user-agent")) {
+            else if (strcmp(path_list[0], "user-agent") == 0) {
                 char *user_agent = extract_user_agent(incoming_msg);
                 char response[1100];
                 snprintf(response, 1100, \
