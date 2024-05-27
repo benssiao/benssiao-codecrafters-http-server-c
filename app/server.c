@@ -110,13 +110,13 @@ int main() {
                     free_pathlist(path_list);
                     send404(connected_fd);
                 }
+                close(connected_fd);
             }
-            close(connected_fd);
-            exit(0);
+            close(connected_fd);  
         }
-        close(connected_fd);  
     }
-            }
+    return 0;
+}
     
 
 void send404(int socket) {
