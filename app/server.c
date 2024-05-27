@@ -70,8 +70,6 @@ int main() {
                 }
                 printf("incoming_msg: %s\n", incoming_msg);
                 char **path_list = extract_path(incoming_msg);
-
-                
                 if (strcmp(path_list[0], "") == 0) {
                     free_pathlist(path_list);
                     send200(connected_fd);
@@ -105,25 +103,21 @@ int main() {
                         free_user_agent(user_agent);
                         exit(1);
                         }
-
-
+                    
                 }
                 else {
                     // printf("This is wrong!!!");
                     free_pathlist(path_list);
                     send404(connected_fd);
                 }
-                
-                }
+            }
             close(connected_fd);
             exit(0);
-            }
-                
-                
-                
-        
-            }
+        }
+        close(connected_fd);  
     }
+            }
+    
 
 void send404(int socket) {
     char *response; 
