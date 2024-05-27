@@ -92,6 +92,7 @@ int main() {
                 else if (strcmp(path_list[0], "user-agent") == 0) {
                     char *user_agent = extract_user_agent(incoming_msg);
                     char response[1100];
+                    printf("%s\n", user_agent);
                     snprintf(response, 1100, \
                             "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
                             , strlen(user_agent), user_agent);
