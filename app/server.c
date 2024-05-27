@@ -60,7 +60,7 @@ int main() {
             continue;
         }
         else {
-                if (!fork()) {
+            if (!fork()) {
                 printf("Client connected\n");
                 char incoming_msg[1024];
                 int buff_size = 1024;
@@ -113,9 +113,11 @@ int main() {
                     free_pathlist(path_list);
                     send404(connected_fd);
                 }
-                close(connected_fd);
-                exit(0);
+                
                 }
+            close(connected_fd);
+            exit(0);
+            }
                 
                 
                 
