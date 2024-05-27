@@ -60,68 +60,66 @@ int main() {
             continue;
         }
         else {
-            printf("Client connected\n");
-            char incoming_msg[1024];
-            int buff_size = 1024;
-            if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
-                perror("receive error.");
-                exit(1);
-            }
-            printf("incoming_msg: %s\n", incoming_msg);
-            char **path_list = extract_path(incoming_msg);
-
-            
-            for (char **iter = path_list; strcmp(*iter, "") != 0; iter++) {
-                printf("%s\n", *iter);
-            }
-            printf("comp: %d\n", strcmp(path_list[0], "user-agent"));
-            
-            if (strcmp(path_list[0], "") == 0) {
-                free_pathlist(path_list);
-                send200(connected_fd);
-            } 
-            else if (strcmp(path_list[0], "echo") == 0) {
-                // printf("%s\n", output);
-                char response[1100];
-                snprintf(response, 1100, \
-                        "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                        , strlen(path_list[1]), path_list[1]);
-                // printf("%s\n", response);
-                if (send(connected_fd, response, strlen(response), 0) == -1) {
-                    perror("send error 3.");
-                    close(connected_fd);
-                    free_pathlist(path_list);
+                if (!fork()) {
+                printf("Client connected\n");
+                char incoming_msg[1024];
+                int buff_size = 1024;
+                if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
+                    perror("receive error.");
                     exit(1);
-                    }
-                free_pathlist(path_list);
                 }
-            else if (strcmp(path_list[0], "user-agent") == 0) {
-                char *user_agent = extract_user_agent(incoming_msg);
-                char response[1100];
-                snprintf(response, 1100, \
-                        "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                        , strlen(user_agent), user_agent);
+                printf("incoming_msg: %s\n", incoming_msg);
+                char **path_list = extract_path(incoming_msg);
 
-                if (send(connected_fd, response, strlen(response), 0) == -1) {
-                    perror("send error 3.");
-                    close(connected_fd);
+                
+                if (strcmp(path_list[0], "") == 0) {
                     free_pathlist(path_list);
-                    free_user_agent(user_agent);
-                    exit(1);
+                    send200(connected_fd);
+                } 
+                else if (strcmp(path_list[0], "echo") == 0) {
+                    // printf("%s\n", output);
+                    char response[1100];
+                    snprintf(response, 1100, \
+                            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
+                            , strlen(path_list[1]), path_list[1]);
+                    // printf("%s\n", response);
+                    if (send(connected_fd, response, strlen(response), 0) == -1) {
+                        perror("send error 3.");
+                        close(connected_fd);
+                        free_pathlist(path_list);
+                        exit(1);
+                        }
+                    free_pathlist(path_list);
                     }
+                else if (strcmp(path_list[0], "user-agent") == 0) {
+                    char *user_agent = extract_user_agent(incoming_msg);
+                    char response[1100];
+                    snprintf(response, 1100, \
+                            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
+                            , strlen(user_agent), user_agent);
+
+                    if (send(connected_fd, response, strlen(response), 0) == -1) {
+                        perror("send error 3.");
+                        close(connected_fd);
+                        free_pathlist(path_list);
+                        free_user_agent(user_agent);
+                        exit(1);
+                        }
 
 
-            }
-            else {
-                // printf("This is wrong!!!");
-                free_pathlist(path_list);
-                send404(connected_fd);
-            }
-            }
-            
-            
-            close(connected_fd);
-            exit(0);
+                }
+                else {
+                    // printf("This is wrong!!!");
+                    free_pathlist(path_list);
+                    send404(connected_fd);
+                }
+                close(connected_fd);
+                exit(0);
+                }
+                
+                
+                
+        
             }
     }
 
