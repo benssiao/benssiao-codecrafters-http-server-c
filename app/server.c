@@ -22,6 +22,9 @@ int main(int argc, char *argv[]) {
             directory = argv[2];
         }
     }
+    for (int i = 0; i<argc; i++) {
+        printf("%s\n", argv[i]);
+    }
     printf("argc: %d\n", argc);
     printf("directory: %s\n", directory);
 	// Disable output buffering
