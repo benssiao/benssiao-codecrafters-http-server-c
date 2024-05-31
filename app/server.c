@@ -17,8 +17,10 @@ void free_user_agent(char *user_agent);
 int check_file_exists(const char *fname);
 int main(int argc, char *argv[]) {
     char *directory = "";
+    printf("comp:%d\n", strcmp(argv[1], "--directory"));
     if (argc > 2) {
         if (strcmp(argv[1], "--directory") == 0) {
+            
             directory = argv[2];
         }
     }
