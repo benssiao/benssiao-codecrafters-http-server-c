@@ -16,11 +16,10 @@ char *extract_user_agent(const char *incoming);
 void free_user_agent(char *user_agent);
 int check_file_exists(const char *fname);
 int main(int argc, char *argv[]) {
-    char *directory = "";
+    char directory[100] = "";
     if (argc > 2) {
         if (strcmp(argv[1], "--directory") == 0) {
-            
-            directory = argv[2];
+            memcpy(directory, argv[2], sizeof(char)*strlen(argv[2]));
         }
     }
 	// Disable output buffering
@@ -113,12 +112,11 @@ int main(int argc, char *argv[]) {
                 }
                 else if (strcmp(path_list[0], "files") == 0) { // GET /files/<filename>
                     if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
-                        char filename[strlen(path_list[1]) + strlen(directory) + 2];
-                        memcpy(filename, path_list[1], strlen(path_list[1]) + 1);
+                        char *filename = path_list[1];
                         if (strcmp(directory, "") != 0) {
                             strcat(directory, filename);
-                            printf("file_name: %s\n", filename);
-                            if (check_file_exists(filename)) {
+                            printf("file_name: %s\n", directory);
+                            if (check_file_exists(directory)) {
                                 free_pathlist(path_list);
                                 send200(connected_fd);
                             }
