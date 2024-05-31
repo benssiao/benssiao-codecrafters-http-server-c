@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -13,7 +14,14 @@ char **extract_path(const char *incoming);
 void free_pathlist(char**);
 char *extract_user_agent(const char *incoming);
 void free_user_agent(char *user_agent);
-int main() {
+int check_file_exists(const char *fname);
+int main(int argc, char *argv[]) {
+    char *directory = "";
+    if (argc > 2) {
+        if (strcmp(argv[1], "--directory") == 1) {
+            directory = argv[2];
+        }
+    }
 	// Disable output buffering
 	setbuf(stdout, NULL);
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -68,19 +76,18 @@ int main() {
                     perror("receive error.");
                     exit(1);
                 }
+                
                 printf("incoming_msg: %s\n", incoming_msg);
                 char **path_list = extract_path(incoming_msg);
-                if (strcmp(path_list[0], "") == 0) {
+                if (strcmp(path_list[0], "") == 0) { // GET /
                     free_pathlist(path_list);
                     send200(connected_fd);
                 } 
-                else if (strcmp(path_list[0], "echo") == 0) {
-                    // printf("%s\n", output);
+                else if (strcmp(path_list[0], "echo") == 0) { // GET /echo
                     char response[1100];
                     snprintf(response, 1100, \
                             "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
                             , strlen(path_list[1]), path_list[1]);
-                    // printf("%s\n", response);
                     if (send(connected_fd, response, strlen(response), 0) == -1) {
                         perror("send error 3.");
                         close(connected_fd);
@@ -89,14 +96,12 @@ int main() {
                         }
                     free_pathlist(path_list);
                     }
-                else if (strcmp(path_list[0], "user-agent") == 0) {
+                else if (strcmp(path_list[0], "user-agent") == 0) { // GET /user-agent
                     char *user_agent = extract_user_agent(incoming_msg);
                     char response[1100];
-                    printf("%s\n", user_agent);
                     snprintf(response, 1100, \
                             "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
                             , strlen(user_agent), user_agent);
-
                     if (send(connected_fd, response, strlen(response), 0) == -1) {
                         perror("send error 3.");
                         close(connected_fd);
@@ -104,10 +109,38 @@ int main() {
                         free_user_agent(user_agent);
                         exit(1);
                         }
+                }
+                else if (strcmp(path_list[0], "files") == 0) { // GET /files/<filename>
+                    if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
+                        char filename[strlen(path_list[1]) + strlen(directory) + 2];
+                        memcpy(filename, path_list[1], strlen(path_list[1]) + 1);
+                        if (strcmp(directory, "") != 0) {
+                            strcat(filename, directory);
+                            printf("file_name: %s\n", filename);
+                            if (check_file_exists(filename)) {
+                                free_pathlist(path_list);
+                                send200(connected_fd);
+                            }
+                            else{
+                                free_pathlist(path_list);
+                                send404(connected_fd);
+                            }
+                        }
+                        else {
+                            free_pathlist(path_list);
+                            perror("Get file: input error. No directory");
+                            exit(1);
+                        }
+                    }
+                    else{
+                        free_pathlist(path_list);
+                        perror("GET file: input error.");
+                        exit(1);
+                    }
+
                     
                 }
                 else {
-                    // printf("This is wrong!!!");
                     free_pathlist(path_list);
                     send404(connected_fd);
                 }
@@ -138,7 +171,7 @@ void send200(int socket) {
         exit(1);
     }
 }
-char **extract_path(const char* incoming) {
+char **extract_path(const char* incoming) { // If incoming == /hello/world then outputs path_list = [hello, world, ""]
     char *path_start, *path_end;
     char **output;
     if ((path_start = strchr(incoming, '/')) == NULL) {
@@ -155,7 +188,7 @@ char **extract_path(const char* incoming) {
     memcpy(path_str, path_start, sizeof(char)*(path_end-path_start));
     path_str[path_end-path_start] = '\0';
     // printf("path_str: %s\n", path_str);
-    output = (char**) malloc(sizeof(char*)*(10)); // Need 1 more for the terminating null char.
+    output = (char**) malloc(sizeof(char*)*(10)); // Need 1 more for the terminating null char. Also I'm assuming there wont be more than 10 depth to any folder.
     int i = 0;
     for (char *iter = strtok(path_str, "/"); iter != NULL; iter = strtok(NULL, "/")) {
         char *curr_str = (char*)malloc(strlen(iter)*sizeof(char)+1);
@@ -171,17 +204,16 @@ char **extract_path(const char* incoming) {
 }
 char *extract_user_agent(const char *incoming) {
     char *path_start, *path_end;
+    char *colon;
     char *output;
-    if ((path_start = strchr(incoming, '\n')) == NULL) {
-        perror("Input error.");
-        exit(1);
-    }
-    path_start++;
-    if ((path_start = strchr(path_start, '\n')) == NULL) {
+
+    if ((path_start = strstr(incoming, "User-Agent")) == NULL) {
         perror("Input error.");
         exit(1);
     }
     if ((path_start = strchr(path_start, ' ')) == NULL) {
+
+
         perror("Input error.");
         exit(1);
     }
@@ -192,8 +224,11 @@ char *extract_user_agent(const char *incoming) {
     output = (char*) malloc((path_end-path_start)*sizeof(char));
     memcpy(output, path_start+1, path_end-path_start-1);
     output[path_end-path_start] = '\0';
+    printf("User-Agent I Got : %s\n", output);
+
     return output;
 }
+
 
 void free_user_agent(char *user_agent) {
     free(user_agent);
@@ -203,4 +238,13 @@ void free_pathlist(char **path_list){
         free(*iter);
     }
     free(path_list);
+}
+int check_file_exists(const char *fname) {
+    FILE *file;
+    if ((file = fopen(fname, "r"))) {
+        fclose(file);
+        return 1;
+    }
+    fclose(file);
+    return 0;
 }
