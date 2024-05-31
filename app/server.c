@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
                     exit(1);
                 }
                 
-                printf("incoming_msg: %s\n", incoming_msg);
+                // printf("incoming_msg: %s\n", incoming_msg);
                 char **path_list = extract_path(incoming_msg);
                 if (strcmp(path_list[0], "") == 0) { // GET /
                     free_pathlist(path_list);
@@ -229,7 +229,7 @@ char *extract_user_agent(const char *incoming) {
     output = (char*) malloc((path_end-path_start)*sizeof(char));
     memcpy(output, path_start+1, path_end-path_start-1);
     output[path_end-path_start] = '\0';
-    printf("User-Agent I Got : %s\n", output);
+    //printf("User-Agent I Got : %s\n", output);
 
     return output;
 }
