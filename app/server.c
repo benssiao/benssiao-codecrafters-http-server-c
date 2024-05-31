@@ -23,10 +23,6 @@ int main(int argc, char *argv[]) {
             directory = argv[2];
         }
     }
-    /* for (int i = 1; i<argc; i++) {
-        printf("argv[%d]: %s\n", i, argv[i]);
-    } */
-    printf("directory: %s\n", directory);
 	// Disable output buffering
 	setbuf(stdout, NULL);
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -120,7 +116,7 @@ int main(int argc, char *argv[]) {
                         char filename[strlen(path_list[1]) + strlen(directory) + 2];
                         memcpy(filename, path_list[1], strlen(path_list[1]) + 1);
                         if (strcmp(directory, "") != 0) {
-                            strcat(filename, directory);
+                            strcat(directory, filename);
                             printf("file_name: %s\n", filename);
                             if (check_file_exists(filename)) {
                                 free_pathlist(path_list);
