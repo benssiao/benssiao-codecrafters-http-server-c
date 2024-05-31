@@ -22,6 +22,8 @@ int main(int argc, char *argv[]) {
             directory = argv[2];
         }
     }
+    printf("argc: %d\n", argc);
+    printf("directory: %s\n", directory);
 	// Disable output buffering
 	setbuf(stdout, NULL);
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
