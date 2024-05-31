@@ -18,7 +18,7 @@ int check_file_exists(const char *fname);
 int main(int argc, char *argv[]) {
     char *directory = "";
     if (argc > 2) {
-        if (strcmp(argv[1], "--directory") == 1) {
+        if (strcmp(argv[1], "--directory") == 0) {
             directory = argv[2];
         }
     }
