@@ -161,8 +161,8 @@ void send200(int socket) {
 
 
 int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type) {
-    char response[100];
-    snprintf(response, 100, \
+    char response[100 + msg_len];
+    snprintf(response, 100 + msg_len, \
             "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %zu\r\n\r\n%s"\
             , Content_Type, msg_len, msg);
     if (send(socket, response, strlen(response), 0) == -1) {
