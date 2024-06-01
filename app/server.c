@@ -7,7 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content-Type);
+int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type);
 void send200(int);
 void send404(int);
 char **extract_path(const char *incoming);
@@ -60,26 +60,24 @@ int main(int argc, char *argv[]) {
     int connected_fd;
 
     while(1) {  // begin listening loop.
-        printf("Listening loop\n");
+        // printf("Listening loop\n");
         connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
-        printf("Connected woohoo\n");
+        // printf("Connected woohoo\n");
         if (connected_fd == -1) {
-            perror("accept error.");
+            // perror("accept error.");
             continue;
         }
         else {
-            send(connected_fd, "1\n", 2, 0);
-            printf("I'm trying to fork\n");
             if (!fork()) {
-                printf("Client connected before\n");
                 close(server_fd);
-                printf("Client connected\n");
                 char incoming_msg[1024];
                 int buff_size = 1024;
+
                 if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
                     perror("receive error.");
                 }
                 char **path_list = extract_path(incoming_msg);
+
                 if (strcmp(path_list[0], "") == 0) { // GET /
                     send200(connected_fd);
                 } 
@@ -101,7 +99,23 @@ int main(int argc, char *argv[]) {
                             strcat(directory, filename);
                             printf("file_name: %s\n", directory);
                             if (check_file_exists(directory)) {
-                                send200WithContentHeader(connected_fd, "I got it\n", strlen("I got it\n"), "application/octet-stream");
+                                FILE *fptr;
+                                fptr = fopen(directory, "r");
+                                if (fptr) {
+                                    fseek (fptr, 0, SEEK_END);
+                                    int length = ftell (fptr);
+                                    fseek (fptr, 0, SEEK_SET);
+                                    char *buffer = (char *) malloc (length+1);
+                                    if (buffer)
+                                    {
+                                        fread(buffer, sizeof(char), length, fptr);
+                                    }
+                                    buffer[length] = '\0';
+                                    if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
+                                        perror("send error: file.\n");
+                                    }
+                                    fclose (fptr);
+                                }
                             }
                             else{
                                 send404(connected_fd);
@@ -120,12 +134,10 @@ int main(int argc, char *argv[]) {
                 }
                 free_pathlist(path_list);
                 close(connected_fd);
-                exit(0);
             }
-            printf("I'm after the fork\n");
         }
+        close(connected_fd);
     }
-    exit(0);
 }
 
 
@@ -152,7 +164,7 @@ int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Conten
     snprintf(response, 100, \
             "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %zu\r\n\r\n%s"\
             , Content_Type, msg_len, msg);
-    if (send(socket, msg, msg_len, 0) == -1) {
+    if (send(socket, response, strlen(response), 0) == -1) {
         return -1;
         }
     return 0;
