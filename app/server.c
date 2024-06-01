@@ -98,7 +98,6 @@ int main(int argc, char *argv[]) {
                         if (strcmp(directory, "") != 0) {
                             strcat(directory, filename);
                             printf("file_name: %s\n", directory);
-                            printf("do I exist? %d\n", check_file_exists(directory));
                             if (check_file_exists(directory)) {
                                 FILE *fptr;
                                 fptr = fopen(directory, "r");
