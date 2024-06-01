@@ -111,6 +111,7 @@ int main(int argc, char *argv[]) {
                                         fread(buffer, sizeof(char), length, fptr);
                                     }
                                     buffer[length] = '\0';
+                                    printf("buffer: %s\n", buffer);
                                     if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
                                         perror("send error: file.\n");
                                     }
