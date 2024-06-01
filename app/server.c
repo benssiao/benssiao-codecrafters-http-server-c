@@ -250,6 +250,7 @@ int check_file_exists(const char *fname) {
         fclose(file);
         return 1;
     }
+    printf("NOPE");
     fclose(file);
     return 0;
 }
