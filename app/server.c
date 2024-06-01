@@ -251,5 +251,5 @@ int check_file_exists(const char *fname) {
     }
     printf("NOPE");
     fclose(file);
-    return 0;
+    return -1;
 }
