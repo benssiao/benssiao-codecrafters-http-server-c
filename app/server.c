@@ -7,7 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-int check_if_valid_path(const char*);
+int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content-Type);
 void send200(int);
 void send404(int);
 char **extract_path(const char *incoming);
@@ -24,10 +24,7 @@ int main(int argc, char *argv[]) {
     }
 	// Disable output buffering
 	setbuf(stdout, NULL);
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	printf("Logs from your program will appear here!\n");
     int server_fd, client_addr_len;
-	// Uncomment this block to pass the first stage
 	struct sockaddr_in client_addr;
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
@@ -61,54 +58,41 @@ int main(int argc, char *argv[]) {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
     int connected_fd;
-    while(1) {
-        // begin listening loop.
-        if ((connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len)) == -1) {
+
+    while(1) {  // begin listening loop.
+        printf("Listening loop\n");
+        connected_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+        printf("Connected woohoo\n");
+        if (connected_fd == -1) {
             perror("accept error.");
             continue;
         }
         else {
+            send(connected_fd, "1\n", 2, 0);
+            printf("I'm trying to fork\n");
             if (!fork()) {
+                printf("Client connected before\n");
+                close(server_fd);
                 printf("Client connected\n");
                 char incoming_msg[1024];
                 int buff_size = 1024;
                 if (recv(connected_fd, incoming_msg, buff_size, 0) < 1) {
                     perror("receive error.");
-                    exit(1);
                 }
-                
-                // printf("incoming_msg: %s\n", incoming_msg);
                 char **path_list = extract_path(incoming_msg);
                 if (strcmp(path_list[0], "") == 0) { // GET /
-                    free_pathlist(path_list);
                     send200(connected_fd);
                 } 
                 else if (strcmp(path_list[0], "echo") == 0) { // GET /echo
-                    char response[1100];
-                    snprintf(response, 1100, \
-                            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                            , strlen(path_list[1]), path_list[1]);
-                    if (send(connected_fd, response, strlen(response), 0) == -1) {
-                        perror("send error 3.");
-                        close(connected_fd);
-                        free_pathlist(path_list);
-                        exit(1);
-                        }
-                    free_pathlist(path_list);
+                    if (send200WithContentHeader(connected_fd, path_list[1], strlen(path_list[1]), "text/plain") == -1) {
+                        perror("send error 3.");  
                     }
+                }
                 else if (strcmp(path_list[0], "user-agent") == 0) { // GET /user-agent
                     char *user_agent = extract_user_agent(incoming_msg);
-                    char response[1100];
-                    snprintf(response, 1100, \
-                            "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s"\
-                            , strlen(user_agent), user_agent);
-                    if (send(connected_fd, response, strlen(response), 0) == -1) {
-                        perror("send error 3.");
-                        close(connected_fd);
-                        free_pathlist(path_list);
-                        free_user_agent(user_agent);
-                        exit(1);
-                        }
+                    if (send200WithContentHeader(connected_fd, user_agent, strlen(user_agent), "text/plain") == -1) {
+                        perror("send error: user-agent.");
+                    } 
                 }
                 else if (strcmp(path_list[0], "files") == 0) { // GET /files/<filename>
                     if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
@@ -117,59 +101,64 @@ int main(int argc, char *argv[]) {
                             strcat(directory, filename);
                             printf("file_name: %s\n", directory);
                             if (check_file_exists(directory)) {
-                                free_pathlist(path_list);
-                                send200(connected_fd);
+                                send200WithContentHeader(connected_fd, "I got it\n", strlen("I got it\n"), "application/octet-stream");
                             }
                             else{
-                                free_pathlist(path_list);
                                 send404(connected_fd);
                             }
                         }
                         else {
-                            free_pathlist(path_list);
                             perror("Get file: input error. No directory");
-                            exit(1);
                         }
                     }
                     else{
-                        free_pathlist(path_list);
                         perror("GET file: input error.");
-                        exit(1);
                     }
-
-                    
                 }
-                else {
-                    free_pathlist(path_list);
+                else { // ERRORNOUS INPUT.
                     send404(connected_fd);
                 }
+                free_pathlist(path_list);
                 close(connected_fd);
+                exit(0);
             }
-            close(connected_fd);  
+            printf("I'm after the fork\n");
         }
     }
-    return 0;
+    exit(0);
 }
-    
+
 
 void send404(int socket) {
     char *response; 
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
     if (send(socket, response, strlen(response), 0) == -1) {
         perror("senderror 4.");
-        close(socket);
-        exit(1);
     }
 }
+
+
 void send200(int socket) {
     char *response; 
     response = "HTTP/1.1 200 OK\r\n\r\n";
     if (send(socket, response, strlen(response), 0 ) == -1) {
         perror("senderror 5.");
-        close(socket);
-        exit(1);
     }
 }
+
+
+int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type) {
+    char response[100];
+    snprintf(response, 100, \
+            "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %zu\r\n\r\n%s"\
+            , Content_Type, msg_len, msg);
+    if (send(socket, msg, msg_len, 0) == -1) {
+        return -1;
+        }
+    return 0;
+}
+
+
 char **extract_path(const char* incoming) { // If incoming == /hello/world then outputs path_list = [hello, world, ""]
     char *path_start, *path_end;
     char **output;
@@ -181,7 +170,6 @@ char **extract_path(const char* incoming) { // If incoming == /hello/world then 
         perror("Input error2.");
         exit(1);
     }
-    
     // printf("%d\n", path_end-path_start+1);
     char path_str[(path_end-path_start+1)];
     memcpy(path_str, path_start, sizeof(char)*(path_end-path_start));
@@ -201,6 +189,8 @@ char **extract_path(const char* incoming) { // If incoming == /hello/world then 
     output[i] = end;
     return output;
 }
+
+
 char *extract_user_agent(const char *incoming) {
     char *path_start, *path_end;
     char *colon;
@@ -211,8 +201,6 @@ char *extract_user_agent(const char *incoming) {
         exit(1);
     }
     if ((path_start = strchr(path_start, ' ')) == NULL) {
-
-
         perror("Input error.");
         exit(1);
     }
@@ -224,7 +212,6 @@ char *extract_user_agent(const char *incoming) {
     memcpy(output, path_start+1, path_end-path_start-1);
     output[path_end-path_start] = '\0';
     //printf("User-Agent I Got : %s\n", output);
-
     return output;
 }
 
@@ -232,12 +219,16 @@ char *extract_user_agent(const char *incoming) {
 void free_user_agent(char *user_agent) {
     free(user_agent);
 }
+
+
 void free_pathlist(char **path_list){
     for (char **iter = path_list; strcmp(*iter, "") != 0; iter++) {
         free(*iter);
     }
     free(path_list);
 }
+
+
 int check_file_exists(const char *fname) {
     FILE *file;
     if ((file = fopen(fname, "r"))) {
