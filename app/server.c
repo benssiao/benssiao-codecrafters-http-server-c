@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
                         char *filename = path_list[1];
                         if (strcmp(directory, "") != 0) {
                             strcat(directory, filename);
-                            printf("file_name: %s\n", directory);
+                            // printf("file_name: %s\n", directory);
                             if (check_file_exists(directory)) {
                                 FILE *fptr;
                                 fptr = fopen(directory, "r");
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
                                         fread(buffer, sizeof(char), length, fptr);
                                     }
                                     buffer[length] = '\0';
-                                    printf("buffer: %s\n", buffer);
+                                    // printf("buffer: %s\n", buffer);
                                     if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
                                         perror("send error: file.\n");
                                     }
@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
                                 }
                             }
                             else{
+                                printf("I dont exist!\n");
                                 send404(connected_fd);
                             }
                         }
