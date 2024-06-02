@@ -88,6 +88,7 @@ int main(int argc, char *argv[]) {
                 }
                 else if (strcmp(path_list[0], "user-agent") == 0) { // GET /user-agent
                     char *user_agent = extract_user_agent(incoming_msg);
+                    printf("user_agent: %s, user_agent length: %d\n", user_agent, strlen(user_agent));
                     if (send200WithContentHeader(connected_fd, user_agent, strlen(user_agent), "text/plain") == -1) {
                         perror("send error: user-agent.");
                     } 
