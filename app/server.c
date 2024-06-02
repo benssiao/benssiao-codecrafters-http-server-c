@@ -145,7 +145,9 @@ int main(int argc, char *argv[]) {
                     free(command);
                     char *response_body = get_response_body(incoming_msg);
                     FILE *newfile = fopen(directory, "w");
-                    fputs(response_body, directory);
+                    printf("response_body: %s\n", response_body);
+                    fputs(response_body, newfile);
+                    close(newfile);
                     free(response_body);
                     char *response; 
                     response = "HTTP/1.1 201 Created\r\n\r\n";
