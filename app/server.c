@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
                 }
                 char **path_list = extract_path(incoming_msg);
                 char *command = get_command(incoming_msg);
-                printf("command: %s\n", command);
+
                 if (strcmp(command, "GET") == 0) {
                     free(command);
                     if (strcmp(path_list[0], "") == 0) { // GET /
@@ -143,6 +143,7 @@ int main(int argc, char *argv[]) {
                 }
                 else if (strcmp(command, "POST") == 0) {
                     free(command);
+                    printf("command: %s\n", command);
                     if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
                         char *filename = path_list[1];
                         if (strcmp(directory, "") != 0) {
