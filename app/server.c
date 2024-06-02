@@ -143,22 +143,30 @@ int main(int argc, char *argv[]) {
                 }
                 else if (strcmp(command, "POST") == 0) {
                     free(command);
-                    char *response_body = get_response_body(incoming_msg);
-                    FILE *newfile;
-                    if ((newfile = fopen(directory, "w")) == NULL) {
-                        perror("Couldn't open.");
-                    }
-                    printf("directory: %s\n", directory);
-                    printf("response_body: %s\n", response_body);
-                    fputs(response_body, newfile);
-                    printf("put it in the file");
-                    fclose(newfile);
-                    free(response_body);
-                    char *response; 
-                    response = "HTTP/1.1 201 Created\r\n\r\n";
-                    printf("response: %s\n", response);
-                    if (send(connected_fd, response, strlen(response), 0) == -1) {
-                        perror("senderror 5.");
+                    if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
+                        char *filename = path_list[1];
+                        if (strcmp(directory, "") != 0) {
+                            strcat(directory, filename);
+                            if (check_file_exists(directory)) {
+                                char *response_body = get_response_body(incoming_msg);
+                                FILE *newfile;
+                                if ((newfile = fopen(directory, "w")) == NULL) {
+                                    perror("Couldn't open.");
+                                }
+                                printf("directory: %s\n", directory);
+                                printf("response_body: %s\n", response_body);
+                                fputs(response_body, newfile);
+                                printf("put it in the file");
+                                fclose(newfile);
+                                free(response_body);
+                                char *response; 
+                                response = "HTTP/1.1 201 Created\r\n\r\n";
+                                printf("response: %s\n", response);
+                                if (send(connected_fd, response, strlen(response), 0) == -1) {
+                                    perror("senderror 5.");
+                                }
+                            }
+                        }
                     }
                 }
             }
