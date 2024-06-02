@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
                     free_pathlist(path_list);
                     close(connected_fd);
                 }
-                else if (strcmp(command, "PUT") == 0) {
+                else if (strcmp(command, "POST") == 0) {
                     free(command);
                     char *response_body = get_response_body(incoming_msg);
                     FILE *newfile = fopen(directory, "w");
