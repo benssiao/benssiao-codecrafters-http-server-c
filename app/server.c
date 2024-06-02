@@ -7,6 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+char *get_response_body(char *incoming_msg);
 int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type);
 char* get_command(char *incoming_msg);
 void send200(int);
@@ -142,9 +143,18 @@ int main(int argc, char *argv[]) {
                 }
                 else if (strcmp(command, "PUT") == 0) {
                     free(command);
+                    char *response_body = get_response_body(incoming_msg);
+                    FILE *newfile = fopen(directory, "w");
+                    fputs(response_body, directory);
+                    free(response_body);
+                    char *response; 
+                    response = "HTTP/1.1 201 Created\r\n\r\n";
+                    if (send(socket, response, strlen(response), 0) == -1) {
+                        perror("senderror 5.");
+                    }
                 }
             }
-            }
+        }
         close(connected_fd);
     }
 }
@@ -267,4 +277,26 @@ int check_file_exists(const char *fname) {
         return 1;
     }
     return 0;
+}
+
+char *get_response_body(char *incoming_msg) {
+    char *body_start, *body_end;
+    if ((body_start = strchr(incoming_msg, '\n')) == NULL) {
+        perror("Input error.");
+        exit(1);
+    }
+    body_start++;
+    if ((body_start = strchr(body_start, '\n')) == NULL) {
+        perror("Input error.");
+        exit(1);
+    }
+    body_start++;
+    if ((body_end = strchr(body_start, '\0')) == NULL) {
+        perror("Input error.");
+        exit(1);
+    }
+    int body_len = body_end - body_start + 1;
+    char *output = (char *) malloc(sizeof(char)*body_len);
+    memcpy(output, body_start, body_len);
+    return output;
 }
