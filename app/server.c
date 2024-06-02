@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
                     free(response_body);
                     char *response; 
                     response = "HTTP/1.1 201 Created\r\n\r\n";
-                    if (send(socket, response, strlen(response), 0) == -1) {
+                    if (send(connected_fd, response, strlen(response), 0) == -1) {
                         perror("senderror 5.");
                     }
                 }
