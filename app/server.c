@@ -97,9 +97,7 @@ int main(int argc, char *argv[]) {
                         char *filename = path_list[1];
                         if (strcmp(directory, "") != 0) {
                             strcat(directory, filename);
-                            printf("file_name: %s\n", directory);
-                            printf("check_file: %d\n", check_file_exists(directory));
-                            if (check_file_exists(directory) != 0) {
+                            if (check_file_exists(directory)) {
                                 FILE *fptr;
                                 fptr = fopen(directory, "r");
                                 if (fptr) {
@@ -120,7 +118,6 @@ int main(int argc, char *argv[]) {
                                 }
                             }
                             else{
-                                printf("I dont exist!\n");
                                 send404(connected_fd);
                             }
                         }
@@ -250,6 +247,5 @@ int check_file_exists(const char *fname) {
         fclose(file);
         return 1;
     }
-    printf("NOPE");
-    return -1;
+    return 0;
 }
