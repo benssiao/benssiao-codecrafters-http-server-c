@@ -288,13 +288,18 @@ char *get_response_body(char *incoming_msg) {
         exit(1);
     }
     body_start++;
-    while (body_start != '\r') {
+    while (*body_start != '\r') {
         if ((body_start = strchr(body_start, '\n')) == NULL) {
             perror("Input error.");
             exit(1);
         }
         body_start++;
     }
+    if ((body_start = strchr(body_start, '\n')) == NULL) {
+            perror("Input error.");
+            exit(1);
+        }
+    body_start++;
     if ((body_end = strchr(body_start, '\0')) == NULL) {
         perror("Input error.");
         exit(1);
