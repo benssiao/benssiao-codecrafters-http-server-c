@@ -305,7 +305,7 @@ char *get_response_body(char *incoming_msg) {
         exit(1);
     }
     int body_len = body_end - body_start + 1;
-    char *output = (char *) malloc(sizeof(char)*body_len);
+    char *output = (char *) malloc(sizeof(char)*(body_len+1));
     memcpy(output, body_start, body_len);
     return output;
 }
