@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <unistd.h>
 int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type);
+char* get_command(char *incoming_msg);
 void send200(int);
 void send404(int);
 char **extract_path(const char *incoming);
@@ -77,70 +78,122 @@ int main(int argc, char *argv[]) {
                     perror("receive error.");
                 }
                 char **path_list = extract_path(incoming_msg);
-
-                if (strcmp(path_list[0], "") == 0) { // GET /
-                    send200(connected_fd);
-                } 
-                else if (strcmp(path_list[0], "echo") == 0) { // GET /echo
-                    if (send200WithContentHeader(connected_fd, path_list[1], strlen(path_list[1]), "text/plain") == -1) {
-                        perror("send error 3.");  
-                    }
-                }
-                else if (strcmp(path_list[0], "user-agent") == 0) { // GET /user-agent
-                    char *user_agent = extract_user_agent(incoming_msg);
-                    printf("user_agent: %s, user_agent length: %d\n", user_agent, strlen(user_agent));
-                    if (send200WithContentHeader(connected_fd, user_agent, strlen(user_agent), "text/plain") == -1) {
-                        perror("send error: user-agent.");
+                char *command = get_command(incoming_msg);
+                printf("command: %s\n", command);
+                if (strcmp(command, "GET") == 0) {
+                    free(command);
+                    if (strcmp(path_list[0], "") == 0) { // GET /
+                        send200(connected_fd);
                     } 
-                }
-                else if (strcmp(path_list[0], "files") == 0) { // GET /files/<filename>
-                    if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
-                        char *filename = path_list[1];
-                        if (strcmp(directory, "") != 0) {
-                            strcat(directory, filename);
-                            if (check_file_exists(directory)) {
-                                FILE *fptr;
-                                fptr = fopen(directory, "r");
-                                if (fptr) {
-                                    fseek (fptr, 0, SEEK_END);
-                                    int length = ftell (fptr);
-                                    fseek (fptr, 0, SEEK_SET);
-                                    char *buffer = (char *) malloc (length+1);
-                                    if (buffer)
-                                    {
-                                        fread(buffer, sizeof(char), length, fptr);
+                    else if (strcmp(path_list[0], "echo") == 0) { // GET /echo
+                        if (send200WithContentHeader(connected_fd, path_list[1], strlen(path_list[1]), "text/plain") == -1) {
+                            perror("send error 3.");  
+                        }
+                    }
+                    else if (strcmp(path_list[0], "user-agent") == 0) { // GET /user-agent
+                        char *user_agent = extract_user_agent(incoming_msg);
+                        // printf("user_agent: %s, user_agent length: %d\n", user_agent, strlen(user_agent));
+                        if (send200WithContentHeader(connected_fd, user_agent, strlen(user_agent), "text/plain") == -1) {
+                            perror("send error: user-agent.");
+                        } 
+                    }
+                    else if (strcmp(path_list[0], "files") == 0) { // GET /files/<filename>
+                        if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
+                            char *filename = path_list[1];
+                            if (strcmp(directory, "") != 0) {
+                                strcat(directory, filename);
+                                if (check_file_exists(directory)) {
+                                    FILE *fptr;
+                                    fptr = fopen(directory, "r");
+                                    if (fptr) {
+                                        fseek (fptr, 0, SEEK_END);
+                                        int length = ftell (fptr);
+                                        fseek (fptr, 0, SEEK_SET);
+                                        char *buffer = (char *) malloc (length+1);
+                                        if (buffer)
+                                        {
+                                            fread(buffer, sizeof(char), length, fptr);
+                                        }
+                                        buffer[length] = '\0';
+                                        // printf("buffer: %s\n", buffer);
+                                        if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
+                                            perror("send error: file.\n");
+                                        }
+                                        fclose (fptr);
                                     }
-                                    buffer[length] = '\0';
-                                    // printf("buffer: %s\n", buffer);
-                                    if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
-                                        perror("send error: file.\n");
-                                    }
-                                    fclose (fptr);
+                                }
+                                else{
+                                    send404(connected_fd);
                                 }
                             }
-                            else{
-                                send404(connected_fd);
+                            else {
+                                perror("Get file: input error. No directory");
                             }
                         }
-                        else {
-                            perror("Get file: input error. No directory");
+                        else{
+                            perror("GET file: input error.");
                         }
                     }
-                    else{
-                        perror("GET file: input error.");
+                    else { // ERRORNOUS INPUT.
+                        send404(connected_fd);
+                    }
+                    free_pathlist(path_list);
+                    close(connected_fd);
+                }
+            else if (strcmp(command, "PUT") == 0) {
+                free(command);
+                if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
+                    char *filename = path_list[1];
+                    if (strcmp(directory, "") != 0) {
+                        strcat(directory, filename);
+                        if (check_file_exists(directory)) {
+                            FILE *fptr;
+                            fptr = fopen(directory, "r");
+                            if (fptr) {
+                                fseek (fptr, 0, SEEK_END);
+                                int length = ftell (fptr);
+                                fseek (fptr, 0, SEEK_SET);
+                                char *buffer = (char *) malloc (length+1);
+                                if (buffer)
+                                {
+                                    fread(buffer, sizeof(char), length, fptr);
+                                }
+                                buffer[length] = '\0';
+                                // printf("buffer: %s\n", buffer);
+                                if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
+                                    perror("send error: file.\n");
+                                }
+                                fclose (fptr);
+                            }
+                        }
+                        else{
+                            send404(connected_fd);
+                        }
+                    }
+                    else {
+                        perror("Get file: input error. No directory");
                     }
                 }
-                else { // ERRORNOUS INPUT.
-                    send404(connected_fd);
+                else{
+                    perror("GET file: input error.");
                 }
-                free_pathlist(path_list);
-                close(connected_fd);
             }
+            
         }
         close(connected_fd);
     }
 }
 
+char* get_command(char *incoming_msg) {
+    char *command = malloc(sizeof(char)*10);
+    int command_length = 0;
+    for (int iter = 0; incoming_msg[iter] != ' '; iter++) {
+        command_length++;
+    } 
+    memcpy(command, incoming_msg, command_length);
+    command[command_length] = '\0';
+    return command;
+}
 
 void send404(int socket) {
     char *response; 
