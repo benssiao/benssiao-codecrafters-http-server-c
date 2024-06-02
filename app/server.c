@@ -144,10 +144,13 @@ int main(int argc, char *argv[]) {
                 else if (strcmp(command, "POST") == 0) {
                     free(command);
                     char *response_body = get_response_body(incoming_msg);
-                    FILE *newfile = fopen(directory, "w");
+                    FILE *newfile;
+                    if ((newfile = fopen(directory, "w")) == NULL) {
+                        perror("Couldn't open.");
+                    }
                     printf("directory: %s\n", directory);
                     printf("response_body: %s\n", response_body);
-                    fputs("response_body", newfile);
+                    fputs(response_body, newfile);
                     printf("put it in the file");
                     fclose(newfile);
                     free(response_body);
