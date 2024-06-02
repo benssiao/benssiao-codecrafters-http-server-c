@@ -143,9 +143,9 @@ int main(int argc, char *argv[]) {
                 }
                 else if (strcmp(command, "POST") == 0) {
                     free(command);
-                    printf("command: %s\n", command);
                     if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
                         char *filename = path_list[1];
+                        printf("Yes\n");
                         if (strcmp(directory, "") != 0) {
                             strcat(directory, filename);
                             if (check_file_exists(directory)) {
