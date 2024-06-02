@@ -140,46 +140,11 @@ int main(int argc, char *argv[]) {
                     free_pathlist(path_list);
                     close(connected_fd);
                 }
-            else if (strcmp(command, "PUT") == 0) {
-                free(command);
-                if (strcmp(path_list[1], "") != 0 && strcmp(path_list[2], "") == 0) {
-                    char *filename = path_list[1];
-                    if (strcmp(directory, "") != 0) {
-                        strcat(directory, filename);
-                        if (check_file_exists(directory)) {
-                            FILE *fptr;
-                            fptr = fopen(directory, "r");
-                            if (fptr) {
-                                fseek (fptr, 0, SEEK_END);
-                                int length = ftell (fptr);
-                                fseek (fptr, 0, SEEK_SET);
-                                char *buffer = (char *) malloc (length+1);
-                                if (buffer)
-                                {
-                                    fread(buffer, sizeof(char), length, fptr);
-                                }
-                                buffer[length] = '\0';
-                                // printf("buffer: %s\n", buffer);
-                                if (send200WithContentHeader(connected_fd, buffer, strlen(buffer), "application/octet-stream") == -1) {
-                                    perror("send error: file.\n");
-                                }
-                                fclose (fptr);
-                            }
-                        }
-                        else{
-                            send404(connected_fd);
-                        }
-                    }
-                    else {
-                        perror("Get file: input error. No directory");
-                    }
-                }
-                else{
-                    perror("GET file: input error.");
+                else if (strcmp(command, "PUT") == 0) {
+                    free(command);
                 }
             }
-            
-        }
+            }
         close(connected_fd);
     }
 }
