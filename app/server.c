@@ -7,6 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+int get_content_length(char* incoming_msg);
 char *get_response_body(char *incoming_msg);
 int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type);
 char* get_command(char *incoming_msg);
@@ -293,8 +294,22 @@ int check_file_exists(const char *fname) {
     }
     return 0;
 }
-
+int get_content_length(char *incoming_msg) {
+    int output;
+    char *content_length_start;
+    if ((content_length_start = strstr(incoming_msg, "Content-Length")) == NULL) {
+        return -1;
+    }
+    content_length_start = strchr(content_length_start, ' ');
+    char *content_length_end = strchr(content_length_start, '\r');
+    int digit_len = content_length_end-content_length_start;
+    char int_as_str[digit_len+1];
+    memcpy(int_as_str, content_length_start, sizeof(char)*digit_len);
+    int_as_str[digit_len] = '\0';
+    return atoi(int_as_str);
+}
 char *get_response_body(char *incoming_msg) {
+    /* Start by seeking the empty line "\r\n". Get the content-length and return, */
     char *body_start, *body_end;
     if ((body_start = strchr(incoming_msg, '\n')) == NULL) {
         perror("Input error.");
@@ -313,12 +328,9 @@ char *get_response_body(char *incoming_msg) {
             exit(1);
         }
     body_start++;
-    if ((body_end = strchr(body_start, '\0')) == NULL) {
-        perror("Input error.");
-        exit(1);
-    }
-    int body_len = body_end - body_start + 1;
-    char *output = (char *) malloc(sizeof(char)*(body_len+1));
-    memcpy(output, body_start, body_len);
+    int content_length = get_content_length(incoming_msg);
+    char *output = (char *) malloc(sizeof(char)*(content_length+1));
+    memcpy(output, body_start, content_length);
+    output[content_length] = '\0';
     return output;
 }
