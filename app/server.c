@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -7,17 +6,14 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-int get_content_length(char* incoming_msg);
-char *get_response_body(char *incoming_msg);
-int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type);
-char* get_command(char *incoming_msg);
-void send200(int);
-void send404(int);
-char **extract_path(const char *incoming);
-void free_pathlist(char**);
-char *extract_user_agent(const char *incoming);
+#include "sendCodes.h"
+#include "HTTP_str_processing.h"
+#include <stddef.h>
+
+
 void free_user_agent(char *user_agent);
 int check_file_exists(const char *fname);
+
 int main(int argc, char *argv[]) {
     char directory[100] = "";
     if (argc > 2) {
@@ -27,8 +23,8 @@ int main(int argc, char *argv[]) {
     }
 	// Disable output buffering
 	setbuf(stdout, NULL);
+    struct sockaddr_in client_addr;
     int server_fd, client_addr_len;
-	struct sockaddr_in client_addr;
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
 		printf("Socket creation failed: %s...\n", strerror(errno));
@@ -153,15 +149,15 @@ int main(int argc, char *argv[]) {
                             if ((newfile = fopen(directory, "w")) == NULL) {
                                 perror("Couldn't open.");
                             }
-                            printf("directory: %s\n", directory);
-                            printf("response_body: %s\n", response_body);
+                            //printf("directory: %s\n", directory);
+                            //printf("response_body: %s\n", response_body);
                             fputs(response_body, newfile);
-                            printf("put it in the file");
+                            //printf("put it in the file");
                             fclose(newfile);
                             free(response_body);
                             char *response; 
                             response = "HTTP/1.1 201 Created\r\n\r\n";
-                            printf("response: %s\n", response);
+                            //printf("response: %s\n", response);
                             if (send(connected_fd, response, strlen(response), 0) == -1) {
                                 perror("senderror 5.");
                             }
@@ -173,103 +169,6 @@ int main(int argc, char *argv[]) {
         }
         close(connected_fd);
     }
-}
-
-char* get_command(char *incoming_msg) {
-    char *command = malloc(sizeof(char)*10);
-    int command_length = 0;
-    for (int iter = 0; incoming_msg[iter] != ' '; iter++) {
-        command_length++;
-    } 
-    memcpy(command, incoming_msg, command_length);
-    command[command_length] = '\0';
-    return command;
-}
-
-void send404(int socket) {
-    char *response; 
-    response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    if (send(socket, response, strlen(response), 0) == -1) {
-        perror("senderror 4.");
-    }
-}
-
-
-void send200(int socket) {
-    char *response; 
-    response = "HTTP/1.1 200 OK\r\n\r\n";
-    if (send(socket, response, strlen(response), 0 ) == -1) {
-        perror("senderror 5.");
-    }
-}
-
-
-int send200WithContentHeader(int socket, char* msg, size_t msg_len, char* Content_Type) {
-    char response[100 + msg_len];
-    snprintf(response, 100 + msg_len, \
-            "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %zu\r\n\r\n%s"\
-            , Content_Type, msg_len, msg);
-    if (send(socket, response, strlen(response), 0) == -1) {
-        return -1;
-        }
-    return 0;
-}
-
-
-char **extract_path(const char* incoming) { // If incoming == /hello/world then outputs path_list = [hello, world, ""]
-    char *path_start, *path_end;
-    char **output;
-    if ((path_start = strchr(incoming, '/')) == NULL) {
-        perror("Input error.");
-        exit(1);
-    }
-    if ((path_end = strchr(path_start, ' ')) == NULL) {
-        perror("Input error2.");
-        exit(1);
-    }
-    // printf("%d\n", path_end-path_start+1);
-    char path_str[(path_end-path_start+1)];
-    memcpy(path_str, path_start, sizeof(char)*(path_end-path_start));
-    path_str[path_end-path_start] = '\0';
-    // printf("path_str: %s\n", path_str);
-    output = (char**) malloc(sizeof(char*)*(10)); // Need 1 more for the terminating null char. Also I'm assuming there wont be more than 10 depth to any folder.
-    int i = 0;
-    for (char *iter = strtok(path_str, "/"); iter != NULL; iter = strtok(NULL, "/")) {
-        char *curr_str = (char*)malloc(strlen(iter)*sizeof(char)+1);
-        memcpy(curr_str, iter, sizeof(char)*strlen(iter));
-        curr_str[strlen(iter)] = '\0';
-        output[i] = curr_str;
-        i++;
-    }
-    char *end = (char*)malloc(sizeof(char));
-    *end = '\0';
-    output[i] = end;
-    return output;
-}
-
-
-char *extract_user_agent(const char *incoming) {
-    char *path_start, *path_end;
-    char *colon;
-    char *output;
-
-    if ((path_start = strstr(incoming, "User-Agent")) == NULL) {
-        perror("Input error.");
-        exit(1);
-    }
-    if ((path_start = strchr(path_start, ' ')) == NULL) {
-        perror("Input error.");
-        exit(1);
-    }
-    if ((path_end = strchr(path_start, '\r')) == NULL) {
-        perror("Input error2.");
-        exit(1);
-    }
-    output = (char*) malloc((path_end-path_start)*sizeof(char));
-    memcpy(output, path_start+1, path_end-path_start-1);
-    output[path_end-path_start] = '\0';
-    //printf("User-Agent I Got : %s\n", output);
-    return output;
 }
 
 
@@ -293,44 +192,4 @@ int check_file_exists(const char *fname) {
         return 1;
     }
     return 0;
-}
-int get_content_length(char *incoming_msg) {
-    int output;
-    char *content_length_start;
-    if ((content_length_start = strstr(incoming_msg, "Content-Length")) == NULL) {
-        return -1;
-    }
-    content_length_start = strchr(content_length_start, ' ');
-    char *content_length_end = strchr(content_length_start, '\r');
-    int digit_len = content_length_end-content_length_start;
-    char int_as_str[digit_len+1];
-    memcpy(int_as_str, content_length_start, sizeof(char)*digit_len);
-    int_as_str[digit_len] = '\0';
-    return atoi(int_as_str);
-}
-char *get_response_body(char *incoming_msg) {
-    /* Start by seeking the empty line "\r\n". Get the content-length and return, */
-    char *body_start, *body_end;
-    if ((body_start = strchr(incoming_msg, '\n')) == NULL) {
-        perror("Input error.");
-        exit(1);
-    }
-    body_start++;
-    while (*body_start != '\r') {
-        if ((body_start = strchr(body_start, '\n')) == NULL) {
-            perror("Input error.");
-            exit(1);
-        }
-        body_start++;
-    }
-    if ((body_start = strchr(body_start, '\n')) == NULL) {
-            perror("Input error.");
-            exit(1);
-        }
-    body_start++;
-    int content_length = get_content_length(incoming_msg);
-    char *output = (char *) malloc(sizeof(char)*(content_length+1));
-    memcpy(output, body_start, content_length);
-    output[content_length] = '\0';
-    return output;
 }
